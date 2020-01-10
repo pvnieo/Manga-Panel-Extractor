@@ -111,7 +111,7 @@ class PanelExtractor:
         # remove images with paper texture, not well segmented
         paperless_imgs = []
         for img in tqdm(imgs, desc="Removing images with paper texture"):
-            hist, bins = np.histogram(imgs[1].copy().ravel(), 256, [0, 256])
+            hist, bins = np.histogram(img.copy().ravel(), 256, [0, 256])
             if np.sum(hist[50:200]) / np.sum(hist) < self.paper_th:
                 paperless_imgs.append(img)
 

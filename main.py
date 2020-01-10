@@ -21,7 +21,7 @@ if __name__ == "__main__":
                         help="Percentage of minimum panel area in relation to total page area.")
     parser.add_argument("-maxp", "--max_panel", type=int, choices=range(1, 99), default=90, metavar="[1-99]",
                         help="Percentage of minimum panel area in relation to total page area.")
-    parser.add_argument("-f", '--test_folder', default='./images/', type=str,
+    parser.add_argument("-f", '--folder', default='./images/', type=str,
                         help="""folder path to input manga pages.
 Panels will be saved to a directory named `panels` in this folder.""")
 

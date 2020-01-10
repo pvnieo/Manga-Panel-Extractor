@@ -23,7 +23,7 @@ optional arguments:
                         Percentage of minimum panel area in relation to total page area.
   -maxp [1-99], --max_panel [1-99]
                         Percentage of minimum panel area in relation to total page area.
-  -f TEST_FOLDER, --test_folder TEST_FOLDER
+  -f FOLDER, --folder FOLDER
                         folder path to input manga pages.
                         Panels will be saved to a directory named `panels` in this folder.
 ```
