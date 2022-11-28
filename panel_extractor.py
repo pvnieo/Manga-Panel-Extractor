@@ -1,18 +1,21 @@
 # stdlib
-from os.path import splitext, basename, exists, join
 from os import makedirs
-# 3p
-from tqdm import tqdm
+from os.path import basename, exists, join, splitext
+
+import cv2
 import numpy as np
 from skimage import measure
-import cv2
+# 3p
+from tqdm import tqdm
+
 # project
 from text_detector.main_text_detector import TextDetector
-from utils import get_files, load_image
+from utils import get_files, load_image, save_file
 
 
 class PanelExtractor:
-    def __init__(self, keep_text=False, min_pct_panel=2, max_pct_panel=90, paper_th=0.35):
+    def __init__(self, just_contours=False, keep_text=False, min_pct_panel=2, max_pct_panel=90, paper_th=0.35):
+        self.just_contours = just_contours
         self.keep_text = keep_text
         assert min_pct_panel < max_pct_panel, "Minimum percentage must be smaller than maximum percentage"
         self.min_panel = min_pct_panel / 100
@@ -33,6 +36,28 @@ class PanelExtractor:
         ind = np.argsort(stats[:, 4], )[::-1][1]
         panel_block_mask = ((labels == ind) * 255).astype("uint8")
         return panel_block_mask
+
+    def generate_contours(self, img):
+        block_mask = self._generate_panel_blocks(img)
+        cv2.rectangle(block_mask, (0, 0), tuple(block_mask.shape[::-1]), (255, 255, 255), 10)
+
+        # detect contours
+        contours, hierarchy = cv2.findContours(block_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        good_contours = []
+
+        for c in contours:
+            area = cv2.contourArea(c)
+            img_area = img.shape[0] * img.shape[1]
+            # print("img.shape[0]", img.shape[0])
+            # print("img.shape[1]", img.shape[1])
+
+            # if the contour is very small or very big, it's likely wrongly detected
+            if area < (self.min_panel * img_area) or area > (self.max_panel * img_area):
+                continue
+
+            good_contours.append(self.c2j(c, img.shape[0], img.shape[1]))
+        
+        return good_contours
 
     def generate_panels(self, img):
         block_mask = self._generate_panel_blocks(img)
@@ -97,6 +122,30 @@ class PanelExtractor:
             # buble mask
             bubble_masks.append(np.isin(all_labels, labels) * 255)
 
+    def contour2path(self, c):
+        str_parts = []
+        for d in c:
+            _substr = f'{d[0][0]} {d[0][1]}'
+            str_parts.append(_substr)
+
+        return ','.join(str_parts)
+
+    def c2j(self, c, img_H, img_W):
+        path = self.contour2path(c)
+        x, y, w, h = cv2.boundingRect(c)
+        x=x/img_W*100
+        y=y/img_H*100
+        w=w/img_W*100
+        h=h/img_H*100
+        return {
+            "x": x,
+            "y": y,
+            "width": w,
+            "height": h,
+            # "path": path
+            "path": f"{x} {y}, {x+w} {y}, {x+w} {y+h}, {x} {y+h}, {x} {y}"
+        }
+
     def extract(self, folder):
         print("Loading images ... ", end="")
         image_list, _, _ = get_files(folder)
@@ -119,8 +168,33 @@ class PanelExtractor:
         if not self.keep_text:
             paperless_imgs = self.remove_text(paperless_imgs)
 
+        pages = []
+
         for i, img in tqdm(enumerate(paperless_imgs), desc="extracting panels"):
-            panels = self.generate_panels(img)
-            name, ext = splitext(basename(image_list[i]))
-            for j, panel in enumerate(panels):
-                cv2.imwrite(join(folder, f'{name}_{j}.{ext}'), panel)
+            
+            if(not self.just_contours):
+                panels = self.generate_panels(img)
+                print(f"we have {len(panels)} panels")
+                name, ext = splitext(basename(image_list[i]))
+                for j, panel in enumerate(panels):
+                    cv2.imwrite(join(folder, f'{name}_{j}.{ext}'), panel)
+
+            contours = self.generate_contours(img)
+            pages.append({
+                "image": f"manga/one/{basename(image_list[i])}",
+                "panels": contours
+            })
+
+        # save pages on disk as json
+        _final = {
+            "title": "",
+            "author": [
+            ],
+            "tags": [
+            ],
+            "pageCount": len(pages),
+            "pages": pages
+        }
+        # Directly from dictionary
+        save_file(_final, 'output.json')
+

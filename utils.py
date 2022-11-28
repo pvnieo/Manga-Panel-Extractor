@@ -1,9 +1,16 @@
 # stdlib
+import json
 import os
+
+import cv2
 # 3p
 import numpy as np
 from skimage import io
-import cv2
+
+
+def save_file(data, filename):
+    with open(filename, 'w') as outfile:
+        json.dump(data, outfile)
 
 
 def get_files(img_dir):

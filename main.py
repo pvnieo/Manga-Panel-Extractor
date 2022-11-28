@@ -1,12 +1,13 @@
 # stdlib
 import argparse
 from argparse import RawTextHelpFormatter
+
 # project
 from panel_extractor import PanelExtractor
 
 
 def main(args):
-    panel_extractor = PanelExtractor(keep_text=args.keep_text, min_pct_panel=args.min_panel, max_pct_panel=args.max_panel)
+    panel_extractor = PanelExtractor(just_contours=args.just_contours, keep_text=args.keep_text, min_pct_panel=args.min_panel, max_pct_panel=args.max_panel)
     panel_extractor.extract(args.folder)
 
 
@@ -15,6 +16,8 @@ if __name__ == "__main__":
         description="Implementation of a Manga Panel Extractor and dialogue bubble text eraser.",
         formatter_class=RawTextHelpFormatter
     )
+    parser.add_argument("-jc", "--just_contours", action='store_true',
+                        help="Just save contours in a file. Will not output panel images")
     parser.add_argument("-kt", "--keep_text", action='store_true',
                         help="Do not erase the dialogue bubble text.")
     parser.add_argument("-minp", "--min_panel", type=int, choices=range(1, 99), default=2, metavar="[1-99]",
