@@ -122,16 +122,7 @@ class PanelExtractor:
             # buble mask
             bubble_masks.append(np.isin(all_labels, labels) * 255)
 
-    def contour2path(self, c):
-        str_parts = []
-        for d in c:
-            _substr = f'{d[0][0]} {d[0][1]}'
-            str_parts.append(_substr)
-
-        return ','.join(str_parts)
-
     def c2j(self, c, img_H, img_W):
-        path = self.contour2path(c)
         x, y, w, h = cv2.boundingRect(c)
         x=x/img_W*100
         y=y/img_H*100
