@@ -18,6 +18,7 @@ Implementation of a Manga Panel Extractor and dialogue bubble text eraser.
 
 optional arguments:
   -h, --help            show this help message and exit
+  -jc, --just_contours  Just save contours in a file. Will not output panel images.
   -kt, --keep_text      Do not erase the dialogue bubble text.
   -minp [1-99], --min_panel [1-99]
                         Percentage of minimum panel area in relation to total page area.
