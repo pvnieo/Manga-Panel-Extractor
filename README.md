@@ -60,6 +60,7 @@ python main.py -kt -jc -f ./images/
 The two main point to reach MVP are:
 
 [ ] Setup proper strategy for panels/contours order
+
 [ ] Create FastApi app
 
 After we reach MVP we can thing about all the other thing like CI/CD, Containerization and so on
