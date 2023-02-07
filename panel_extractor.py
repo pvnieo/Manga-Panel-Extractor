@@ -1,18 +1,21 @@
 # stdlib
-from os.path import splitext, basename, exists, join
 from os import makedirs
-# 3p
-from tqdm import tqdm
+from os.path import basename, exists, join, splitext
+
+import cv2
 import numpy as np
 from skimage import measure
-import cv2
+# 3p
+from tqdm import tqdm
+
 # project
 from text_detector.main_text_detector import TextDetector
-from utils import get_files, load_image
+from utils import get_files, load_image, save_file
 
 
 class PanelExtractor:
-    def __init__(self, keep_text=False, min_pct_panel=2, max_pct_panel=90, paper_th=0.35):
+    def __init__(self, just_contours=False, keep_text=False, min_pct_panel=2, max_pct_panel=90, paper_th=0.35):
+        self.just_contours = just_contours
         self.keep_text = keep_text
         assert min_pct_panel < max_pct_panel, "Minimum percentage must be smaller than maximum percentage"
         self.min_panel = min_pct_panel / 100
@@ -33,6 +36,28 @@ class PanelExtractor:
         ind = np.argsort(stats[:, 4], )[::-1][1]
         panel_block_mask = ((labels == ind) * 255).astype("uint8")
         return panel_block_mask
+
+    def generate_contours(self, img):
+        block_mask = self._generate_panel_blocks(img)
+        cv2.rectangle(block_mask, (0, 0), tuple(block_mask.shape[::-1]), (255, 255, 255), 10)
+
+        # detect contours
+        contours, hierarchy = cv2.findContours(block_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        good_contours = []
+
+        for c in contours:
+            area = cv2.contourArea(c)
+            img_area = img.shape[0] * img.shape[1]
+            # print("img.shape[0]", img.shape[0])
+            # print("img.shape[1]", img.shape[1])
+
+            # if the contour is very small or very big, it's likely wrongly detected
+            if area < (self.min_panel * img_area) or area > (self.max_panel * img_area):
+                continue
+
+            good_contours.append(self.c2j(c, img.shape[0], img.shape[1]))
+        
+        return good_contours
 
     def generate_panels(self, img):
         block_mask = self._generate_panel_blocks(img)
@@ -97,30 +122,70 @@ class PanelExtractor:
             # buble mask
             bubble_masks.append(np.isin(all_labels, labels) * 255)
 
+    def c2j(self, c, img_H, img_W):
+        x, y, w, h = cv2.boundingRect(c)
+        x=x/img_W*100
+        y=y/img_H*100
+        w=w/img_W*100
+        h=h/img_H*100
+        return {
+            "x": x,
+            "y": y,
+            "width": w,
+            "height": h,
+            # "path": path
+            "path": f"{x} {y}, {x+w} {y}, {x+w} {y+h}, {x} {y+h}, {x} {y}"
+        }
+
     def extract(self, folder):
         print("Loading images ... ", end="")
         image_list, _, _ = get_files(folder)
-        imgs = [load_image(x) for x in image_list]
         print("Done!")
 
-        # create panels dir
-        if not exists(join(folder, "panels")):
-            makedirs(join(folder, "panels"))
-        folder = join(folder, "panels")
+        # # create panels dir
+        # if not exists(join(folder, "panels")):
+        #     makedirs(join(folder, "panels"))
+        # folder = join(folder, "panels")
 
-        # remove images with paper texture, not well segmented
-        paperless_imgs = []
-        for img in tqdm(imgs, desc="Removing images with paper texture"):
-            hist, bins = np.histogram(img.copy().ravel(), 256, [0, 256])
-            if np.sum(hist[50:200]) / np.sum(hist) < self.paper_th:
-                paperless_imgs.append(img)
+        # # remove images with paper texture, not well segmented
+        # paperless_imgs = []
+        # for img in tqdm(imgs, desc="Removing images with paper texture"):
+        #     hist, bins = np.histogram(img.copy().ravel(), 256, [0, 256])
+        #     if np.sum(hist[50:200]) / np.sum(hist) < self.paper_th:
+        #         paperless_imgs.append(img)
 
-        # remove text from panels
-        if not self.keep_text:
-            paperless_imgs = self.remove_text(paperless_imgs)
+        # # remove text from panels
+        # if not self.keep_text:
+        #     paperless_imgs = self.remove_text(paperless_imgs)
 
-        for i, img in tqdm(enumerate(paperless_imgs), desc="extracting panels"):
-            panels = self.generate_panels(img)
-            name, ext = splitext(basename(image_list[i]))
-            for j, panel in enumerate(panels):
-                cv2.imwrite(join(folder, f'{name}_{j}.{ext}'), panel)
+        pages = []
+        for i in tqdm(sorted(image_list), desc="extracting panels"):
+            img = load_image(i)
+            
+            if(not self.just_contours):
+                panels = self.generate_panels(img)
+                print(f"we have {len(panels)} panels")
+                name, ext = splitext(basename(i))
+                for j, panel in enumerate(panels):
+                    cv2.imwrite(join(folder, f'{name}_{j}.{ext}'), panel)
+
+            contours = self.generate_contours(img)
+            pages.append({
+                "page_index": i,
+                "image": f"https://cdn.onepiecechapters.com/file/CDN-M-A-N/{basename(i)}",
+                "panels": sorted(contours, key=lambda p: p["y"])
+            })
+
+        # save pages on disk as json
+        _final = {
+            "title": "",
+            "author": [
+            ],
+            "tags": [
+            ],
+            "pageCount": len(pages),
+            "pages": pages
+        }
+        # Directly from dictionary
+        save_file(_final, 'output.json')
+
