@@ -1,5 +1,5 @@
 # Manga-Panel-Extractor
-A python implementation of a Manga Panel Extractor and a dialogue bubble text eraser. (But we don't really care that much about text eraser so we micht as well decide to get rid of this)
+A python implementation of a Manga Panel Extractor and a dialogue bubble text eraser. (But we don't really care that much about text eraser so we might as well decide to get rid of this)
 
 The text erasor is based on the CRAFT text detector. See [here](https://github.com/clovaai/CRAFT-pytorch) for more information.
 
@@ -54,3 +54,12 @@ optional arguments:
 ```
 python main.py -kt -jc -f ./images/
 ```
+
+### Issues
+
+The two main point to reach MVP are:
+
+[ ] Setup proper strategy for panels/contours order
+[ ] Create FastApi app
+
+After we reach MVP we can thing about all the other thing like CI/CD, Containerization and so on
