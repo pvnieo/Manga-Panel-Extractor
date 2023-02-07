@@ -59,6 +59,8 @@ python main.py -kt -jc -f ./images/
 
 The two main point to reach MVP are:
 
+[ ] Fix dark-background-page recognition
+
 [ ] Setup proper strategy for panels/contours order
 
 [ ] Create FastApi app
