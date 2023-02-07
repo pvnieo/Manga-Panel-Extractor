@@ -140,40 +140,40 @@ class PanelExtractor:
     def extract(self, folder):
         print("Loading images ... ", end="")
         image_list, _, _ = get_files(folder)
-        imgs = [load_image(x) for x in image_list]
         print("Done!")
 
-        # create panels dir
-        if not exists(join(folder, "panels")):
-            makedirs(join(folder, "panels"))
-        folder = join(folder, "panels")
+        # # create panels dir
+        # if not exists(join(folder, "panels")):
+        #     makedirs(join(folder, "panels"))
+        # folder = join(folder, "panels")
 
-        # remove images with paper texture, not well segmented
-        paperless_imgs = []
-        for img in tqdm(imgs, desc="Removing images with paper texture"):
-            hist, bins = np.histogram(img.copy().ravel(), 256, [0, 256])
-            if np.sum(hist[50:200]) / np.sum(hist) < self.paper_th:
-                paperless_imgs.append(img)
+        # # remove images with paper texture, not well segmented
+        # paperless_imgs = []
+        # for img in tqdm(imgs, desc="Removing images with paper texture"):
+        #     hist, bins = np.histogram(img.copy().ravel(), 256, [0, 256])
+        #     if np.sum(hist[50:200]) / np.sum(hist) < self.paper_th:
+        #         paperless_imgs.append(img)
 
-        # remove text from panels
-        if not self.keep_text:
-            paperless_imgs = self.remove_text(paperless_imgs)
+        # # remove text from panels
+        # if not self.keep_text:
+        #     paperless_imgs = self.remove_text(paperless_imgs)
 
         pages = []
-
-        for i, img in tqdm(enumerate(paperless_imgs), desc="extracting panels"):
+        for i in tqdm(sorted(image_list), desc="extracting panels"):
+            img = load_image(i)
             
             if(not self.just_contours):
                 panels = self.generate_panels(img)
                 print(f"we have {len(panels)} panels")
-                name, ext = splitext(basename(image_list[i]))
+                name, ext = splitext(basename(i))
                 for j, panel in enumerate(panels):
                     cv2.imwrite(join(folder, f'{name}_{j}.{ext}'), panel)
 
             contours = self.generate_contours(img)
             pages.append({
-                "image": f"manga/one/{basename(image_list[i])}",
-                "panels": contours
+                "page_index": i,
+                "image": f"https://cdn.onepiecechapters.com/file/CDN-M-A-N/{basename(i)}",
+                "panels": sorted(contours, key=lambda p: p["y"])
             })
 
         # save pages on disk as json
