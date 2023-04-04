@@ -4,7 +4,7 @@ A python implementation of a Manga Panel Extractor and a dialogue bubble text er
 The text erasor is based on the CRAFT text detector. See [here](https://github.com/clovaai/CRAFT-pytorch) for more information.
 
 ## Installation
-This game runs on python >= 3.6, use pip to install dependencies:
+This code runs on python >= 3.6, use pip to install dependencies:
 ```
 pip3 install -r requirements.txt
 ```
@@ -22,7 +22,7 @@ optional arguments:
   -minp [1-99], --min_panel [1-99]
                         Percentage of minimum panel area in relation to total page area.
   -maxp [1-99], --max_panel [1-99]
-                        Percentage of minimum panel area in relation to total page area.
+                        Percentage of maximum panel area in relation to total page area.
   -f FOLDER, --folder FOLDER
                         folder path to input manga pages.
                         Panels will be saved to a directory named `panels` in this folder.
