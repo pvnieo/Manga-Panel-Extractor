@@ -189,3 +189,5 @@ class PanelExtractor:
         # Directly from dictionary
         save_file(_final, 'output.json')
 
+        return _final
+
