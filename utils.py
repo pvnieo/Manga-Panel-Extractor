@@ -5,7 +5,36 @@ import os
 import cv2
 # 3p
 import numpy as np
+import requests
+from bs4 import BeautifulSoup
 from skimage import io
+
+
+def download_lmages(url, folder):
+    # Send a GET request to the URL
+    response = requests. get(url)
+
+    # Parse the HTML content using BeautifulSoup
+    soup = BeautifulSoup(response.content, "html.parser")
+    
+    # Find all the unage tags and extract the image URLS
+    img_tags = soup.find_all("img")
+    img_urls = [img['src'] for img in img_tags if img['src'].startswith("https://cdn.onepiecechapters.com/file/CDN-M-A-N/") and img['src'].endswith(".png")]
+
+    # Create the folder if not exist
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    # Download each image
+    for img_url in img_urls:
+        img_name = os.path.basename(img_url)
+        img_data = requests.get(img_url).content
+        img_path = os.path.join(folder, img_name)
+        with open(img_path, "wb") as f:
+            f.write(img_data)
+
+    print("All images downloaded successfully!")
+
 
 
 def save_file(data, filename):
