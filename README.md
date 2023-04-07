@@ -19,6 +19,21 @@ pip3 install -r requirements.txt
 ```
 
 ## Usage
+
+The project can be used in 2 ways. Via command line or via API
+
+### API
+To run the API you have to run
+```
+uvicorn app:app --reload  
+```
+and then you can find the resource at 
+```
+localhost:8000/chapter
+```
+
+### CLI
+
 Use the `get_images.sh` script to get all the images to be processed. 
 
 Give it executable permissions
@@ -50,7 +65,7 @@ optional arguments:
                         Panels will be saved to a directory named `panels` in this folder.
 ```
 
-### Example
+Example
 ```
 python main.py -kt -jc -f ./images/
 ```
@@ -63,6 +78,6 @@ The two main point to reach MVP are:
 
 [ ] Setup proper strategy for panels/contours order
 
-[ ] Create FastApi app
+[x] Create FastApi app
 
 After we reach MVP we can thing about all the other thing like CI/CD, Containerization and so on
