@@ -3,12 +3,14 @@ import argparse
 import subprocess
 from argparse import RawTextHelpFormatter
 from typing import Union
+from uuid import uuid4
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 # project
 from panel_extractor import PanelExtractor
+from utils import download_lmages
 
 app = FastAPI()
 
@@ -53,11 +55,16 @@ def post_chapter(data: Data):
     logger.info("post_chapter")
     chapter_url = data.chapter_url
 
-    output = subprocess.check_output(['./get_images.sh',str(chapter_url)])
-    # print(output)
+    # TODO: this needs!!!! to be fixed
+    # we do not need to dowload all the images for the same chapter several times
+    # and to be honest we don't need to ccalc the panels each time
+    # a lot of caching needs to be done :)
+    _path = f"./images/{uuid4()}"
+
+    download_lmages(chapter_url, _path)
 
     # potentially we want the shell script to generate a uuid each time, save the result in a folder named as the uuid
     # and return the uuid as output, and use the autput uuid as input for the method extract
-    final = panel_extractor.extract("./images/")
+    final = panel_extractor.extract(_path)
 
     return {"data": final}
