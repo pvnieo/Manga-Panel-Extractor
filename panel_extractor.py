@@ -9,7 +9,7 @@ from skimage import measure
 from tqdm import tqdm
 
 # project
-from text_detector.main_text_detector import TextDetector
+# from text_detector.main_text_detector import TextDetector
 from utils import get_files, load_image, save_file
 
 
@@ -23,8 +23,8 @@ class PanelExtractor:
         self.paper_th = paper_th
 
         # Load text detector
-        print('Load text detector ... ', end="")
-        self.text_detector = TextDetector()
+        # print('Load text detector ... ', end="")
+        # self.text_detector = TextDetector()
         print("Done!")
 
     def _generate_panel_blocks(self, img):
@@ -87,27 +87,27 @@ class PanelExtractor:
 
         return panels
 
-    def remove_text(self, imgs):
-        # detect text
-        res = self.text_detector.detect(imgs)
+    # def remove_text(self, imgs):
+    #     # detect text
+    #     res = self.text_detector.detect(imgs)
 
-        print("Removing text ... ", end="")
-        text_masks = []
-        for i, (_, polys) in enumerate(res):
-            mask_text = np.zeros_like(imgs[i], "int32")
-            for poly in polys:
-                cv2.fillPoly(mask_text, [poly.astype("int32")], color=(255, 255, 255))
-            text_masks.append(mask_text)
+    #     print("Removing text ... ", end="")
+    #     text_masks = []
+    #     for i, (_, polys) in enumerate(res):
+    #         mask_text = np.zeros_like(imgs[i], "int32")
+    #         for poly in polys:
+    #             cv2.fillPoly(mask_text, [poly.astype("int32")], color=(255, 255, 255))
+    #         text_masks.append(mask_text)
 
-        # self.get_speech_bubble_mask(imgs, text_masks)
+    #     # self.get_speech_bubble_mask(imgs, text_masks)
 
-        without_text = []
-        for i, img in enumerate(imgs):
-            img[text_masks[i] == 255] = 255
-            without_text.append(img)
-        print("Done!")
+    #     without_text = []
+    #     for i, img in enumerate(imgs):
+    #         img[text_masks[i] == 255] = 255
+    #         without_text.append(img)
+    #     print("Done!")
 
-        return without_text
+    #     return without_text
 
     def get_speech_bubble_mask(self, imgs, text_masks):
         bubble_masks = []
