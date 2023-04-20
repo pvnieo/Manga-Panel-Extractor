@@ -57,7 +57,7 @@ def post_chapter(data: Data):
 
     # TODO: this needs!!!! to be fixed
     # we do not need to dowload all the images for the same chapter several times
-    # and to be honest we don't need to ccalc the panels each time
+    # and to be honest we don't need to calc the panels each time
     # a lot of caching needs to be done :)
     _path = f"./images/{uuid4()}"
 
