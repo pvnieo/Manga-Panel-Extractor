@@ -1,4 +1,6 @@
+import logging
 import os
+from logging.handlers import TimedRotatingFileHandler
 from time import time
 from typing import Union
 from uuid import uuid4
@@ -28,6 +30,33 @@ q = Queue(os.environ.get('QUEUE_NAME'), connection=redis_conn)
 panel_extractor = PanelExtractor(just_contours=True, keep_text=True, min_pct_panel=2, max_pct_panel=90)
 
 
+
+
+# create logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+# create file handler which logs even debug messages
+
+fh = TimedRotatingFileHandler('OnePanelLogs',  when='midnight')
+fh.setLevel(logging.DEBUG)
+
+# create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# add formatter to ch
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+
+# add handlers to logger
+logger.addHandler(ch)
+logger.addHandler(fh)
+
+
 class Data(BaseModel):
     chapter_url: str
 
@@ -43,18 +72,21 @@ def queueSize():
 
 
 def wrapper(chapter_url):
-    print("inside wrapper")
-    _path = f"./images/{uuid4()}"
-    print("_path", _path)
+    request_id = uuid4()
+    logger.info(f"request_id: {request_id}")
+
+    _path = f"./images/{request_id}"
     download_lmages(chapter_url, _path)
-    print("images downloaded")
+    logger.info("images downloaded")
+
     panels_extracted = panel_extractor.extract(_path)
-    print("panels extracted")
+    logger.info("panels extracted")
+    
     return panels_extracted
 
 @app.post("/chapter")
 def post_chapter(data: Data):
-    print("post_chapter")
+    logger.info("New Request")
     chapter_url = data.chapter_url
 
     # TODO: this needs!!!! to be fixed
