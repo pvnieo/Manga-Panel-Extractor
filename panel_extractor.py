@@ -5,6 +5,7 @@ from os.path import basename, exists, join, splitext
 import cv2
 import numpy as np
 from skimage import measure
+
 # 3p
 from tqdm import tqdm
 
@@ -14,10 +15,19 @@ from utils import get_files, load_image, save_file
 
 
 class PanelExtractor:
-    def __init__(self, just_contours=False, keep_text=False, min_pct_panel=2, max_pct_panel=90, paper_th=0.35):
+    def __init__(
+        self,
+        just_contours=False,
+        keep_text=False,
+        min_pct_panel=2,
+        max_pct_panel=90,
+        paper_th=0.35,
+    ):
         self.just_contours = just_contours
         self.keep_text = keep_text
-        assert min_pct_panel < max_pct_panel, "Minimum percentage must be smaller than maximum percentage"
+        assert (
+            min_pct_panel < max_pct_panel
+        ), "Minimum percentage must be smaller than maximum percentage"
         self.min_panel = min_pct_panel / 100
         self.max_panel = max_pct_panel / 100
         self.paper_th = paper_th
@@ -32,17 +42,27 @@ class PanelExtractor:
         blur = cv2.GaussianBlur(img, (5, 5), 0)
         thresh = cv2.threshold(blur, 230, 255, cv2.THRESH_BINARY)[1]
         cv2.rectangle(thresh, (0, 0), tuple(img.shape[::-1]), (0, 0, 0), 10)
-        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(thresh, 4, cv2.CV_32S)
-        ind = np.argsort(stats[:, 4], )[::-1][1]
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+            thresh, 4, cv2.CV_32S
+        )
+        ind = np.argsort(
+            stats[:, 4],
+        )[
+            ::-1
+        ][1]
         panel_block_mask = ((labels == ind) * 255).astype("uint8")
         return panel_block_mask
 
     def generate_contours(self, img):
         block_mask = self._generate_panel_blocks(img)
-        cv2.rectangle(block_mask, (0, 0), tuple(block_mask.shape[::-1]), (255, 255, 255), 10)
+        cv2.rectangle(
+            block_mask, (0, 0), tuple(block_mask.shape[::-1]), (255, 255, 255), 10
+        )
 
         # detect contours
-        contours, hierarchy = cv2.findContours(block_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(
+            block_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
         good_contours = []
 
         for c in contours:
@@ -56,15 +76,19 @@ class PanelExtractor:
                 continue
 
             good_contours.append(self.c2j(c, img.shape[0], img.shape[1]))
-        
+
         return good_contours
 
     def generate_panels(self, img):
         block_mask = self._generate_panel_blocks(img)
-        cv2.rectangle(block_mask, (0, 0), tuple(block_mask.shape[::-1]), (255, 255, 255), 10)
+        cv2.rectangle(
+            block_mask, (0, 0), tuple(block_mask.shape[::-1]), (255, 255, 255), 10
+        )
 
         # detect contours
-        contours, hierarchy = cv2.findContours(block_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(
+            block_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
         panels = []
 
         for i in range(len(contours)):
@@ -79,9 +103,9 @@ class PanelExtractor:
             # create panel mask
             panel_mask = np.ones_like(block_mask, "int32")
             cv2.fillPoly(panel_mask, [contours[i].astype("int32")], color=(0, 0, 0))
-            panel_mask = panel_mask[y:y+h, x:x+w].copy()
+            panel_mask = panel_mask[y : y + h, x : x + w].copy()
             # apply panel mask
-            panel = img[y:y+h, x:x+w].copy()
+            panel = img[y : y + h, x : x + w].copy()
             panel[panel_mask == 1] = 255
             panels.append(panel)
 
@@ -124,17 +148,17 @@ class PanelExtractor:
 
     def c2j(self, c, img_H, img_W):
         x, y, w, h = cv2.boundingRect(c)
-        x=x/img_W*100
-        y=y/img_H*100
-        w=w/img_W*100
-        h=h/img_H*100
+        x = x / img_W * 100
+        y = y / img_H * 100
+        w = w / img_W * 100
+        h = h / img_H * 100
         return {
             "x": x,
             "y": y,
             "width": w,
             "height": h,
             # "path": path
-            "path": f"{x} {y}, {x+w} {y}, {x+w} {y+h}, {x} {y+h}, {x} {y}"
+            "path": f"{x} {y}, {x+w} {y}, {x+w} {y+h}, {x} {y+h}, {x} {y}",
         }
 
     def extract(self, folder):
@@ -161,33 +185,32 @@ class PanelExtractor:
         pages = []
         for i in tqdm(sorted(image_list), desc="extracting panels"):
             img = load_image(i)
-            
-            if(not self.just_contours):
+
+            if not self.just_contours:
                 panels = self.generate_panels(img)
                 print(f"we have {len(panels)} panels")
                 name, ext = splitext(basename(i))
                 for j, panel in enumerate(panels):
-                    cv2.imwrite(join(folder, f'{name}_{j}.{ext}'), panel)
+                    cv2.imwrite(join(folder, f"{name}_{j}.{ext}"), panel)
 
             contours = self.generate_contours(img)
-            pages.append({
-                "page_index": i,
-                "image": f"https://cdn.onepiecechapters.com/file/CDN-M-A-N/{basename(i)}",
-                "panels": sorted(contours, key=lambda p: p["y"])
-            })
+            pages.append(
+                {
+                    "page_index": i,
+                    "image": f"https://cdn.onepiecechapters.com/file/CDN-M-A-N/{basename(i)}",
+                    "panels": sorted(contours, key=lambda p: p["y"]),
+                }
+            )
 
         # save pages on disk as json
         _final = {
             "title": "",
-            "author": [
-            ],
-            "tags": [
-            ],
+            "author": [],
+            "tags": [],
             "pageCount": len(pages),
-            "pages": pages
+            "pages": pages,
         }
         # Directly from dictionary
-        save_file(_final, 'output.json')
+        # save_file(_final, 'output.json')
 
         return _final
-
