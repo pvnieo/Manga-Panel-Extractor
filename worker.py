@@ -1,7 +1,10 @@
 import os
 
+from dotenv import load_dotenv
 from redis import Redis
 from rq import Connection, Queue, Worker
+
+load_dotenv()
 
 listen = [os.environ.get('QUEUE_NAME')]
 

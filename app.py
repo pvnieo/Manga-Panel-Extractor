@@ -66,9 +66,13 @@ def queueSize():
 
 
 def wrapper(chapter_url):
+    logger.info("inside wrapper")
     _path = f"./images/{uuid4()}"
+    logger.info("_path", _path)
     download_lmages(chapter_url, _path)
+    logger.info("images downloaded")
     panel_extractor.extract(_path)
+    logger.info("panels extracted")
 
 @app.post("/chapter")
 def post_chapter(data: Data):
@@ -91,8 +95,13 @@ def post_chapter(data: Data):
 
     return {'size': size}
 
-# @app.get("/result/{job}")
-# def result(job):
+# @app.get("/result/{job_id}")
+# def result(job_id):
+#     job = q.fetch_job(job_id)
+
+#     if job.is_failed:
+#         return 'Job has failed!', 400
+
 #     while not job.is_finished:
 #         yield('Job not finished yet, wait for 1s')
 #         time.sleep(1)
