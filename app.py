@@ -29,9 +29,6 @@ q = Queue(os.environ.get('QUEUE_NAME'), connection=redis_conn)
 
 panel_extractor = PanelExtractor(just_contours=True, keep_text=True, min_pct_panel=2, max_pct_panel=90)
 
-
-
-
 # create logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -63,11 +60,13 @@ class Data(BaseModel):
 
 @app.get("/")
 def read_root():
+    logger.info("Hello World!")
     return {"Hello": "World"}
 
 @app.get('/queueSize')
 def queueSize():
-    """Test endpoint"""
+    """queueSize"""
+    logger.info("queueSize")
     return {'Queue Size': len(q)}
 
 
@@ -85,7 +84,7 @@ def wrapper(chapter_url):
     return panels_extracted
 
 @app.post("/chapter")
-def post_chapter(data: Data):
+async def post_chapter(data: Data):
     logger.info("New Request")
     chapter_url = data.chapter_url
 

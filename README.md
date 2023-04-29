@@ -70,6 +70,13 @@ Example
 python main.py -kt -jc -f ./images/
 ```
 
+./start.sh
+
+tail -f my.log
+
+kill -9 `cat save_pid.txt`
+rm save_pid.txt
+
 ### Issues
 
 The two main point to reach MVP are:
