@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from redis import Redis
 from rq import Queue
@@ -16,6 +17,19 @@ from panel_extractor import PanelExtractor
 from utils import download_lmages
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "https://one-panel-next.vercel.app/*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 load_dotenv()
 
