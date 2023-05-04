@@ -74,7 +74,6 @@ class Data(BaseModel):
 
 @app.get("/")
 def read_root():
-    logger.info("Hello World!")
     return {"Hello": "World"}
 
 @app.get('/queueSize')
