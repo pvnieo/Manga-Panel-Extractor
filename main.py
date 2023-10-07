@@ -16,8 +16,6 @@ if __name__ == "__main__":
         description="Implementation of a Manga Panel Extractor and dialogue bubble text eraser.",
         formatter_class=RawTextHelpFormatter
     )
-    parser.add_argument("-jc", "--just_contours", action='store_true',
-                        help="Just save contours in a file. Will not output panel images")
     parser.add_argument("-kt", "--keep_text", action='store_true',
                         help="Do not erase the dialogue bubble text.")
     parser.add_argument("-minp", "--min_panel", type=int, choices=range(1, 99), default=2, metavar="[1-99]",

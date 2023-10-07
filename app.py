@@ -44,7 +44,7 @@ redis_conn = Redis(
 
 q = Queue(os.environ.get('QUEUE_NAME'), connection=redis_conn)
 
-panel_extractor = PanelExtractor(just_contours=True, keep_text=True, min_pct_panel=2, max_pct_panel=90)
+panel_extractor = PanelExtractor(keep_text=True, min_pct_panel=2, max_pct_panel=90)
 
 # create logger
 logger = logging.getLogger(__name__)
